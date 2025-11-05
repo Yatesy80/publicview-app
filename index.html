@@ -6,9 +6,8 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f8f9fa; line-height: 1.5; }
     .logo { text-align: center; margin-bottom: 20px; padding: 20px 0; border-bottom: 1px solid #eee; }
-    .logo h1 { font-size: 2.2rem; margin: 0; color: #000000; font-weight: bold; font-family: Arial, sans-serif; }
+    .logo h1 { font-size: 2.2rem; margin: 0; color: #000000; font-weight: bold; }
     .logo p { margin: 5px 0 0; color: #666; font-size: 1rem; font-style: italic; }
-    h1:not(.logo h1) { color: #2c3e50; text-align: center; font-size: 1.5rem; }
     input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
     button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; margin-top: 10px; cursor: pointer; }
     button:hover { background: #2980b9; }
@@ -20,7 +19,7 @@
     .full-article { display: none; background: #ecf0f1; padding: 20px; margin-top: 10px; border-radius: 6px; }
     .loading { text-align: center; color: #95a5a6; font-style: italic; }
     .error { color: #e74c3c; text-align: center; }
-    .no-posts { text-align: center; color: #95a5a6; font-style: italic; }
+    .no-posts { text-align: center; color: #95a5a6; font-style: italic; padding: 20px; }
   </style>
 </head>
 <body>
@@ -30,91 +29,77 @@
     <p>Australian Opinion Blog</p>
   </div>
 
-  <p style="text-align:center; color:#7f8c8d;">Browse & search opinion pieces on Australian topics</p>
+  <p style="text-align:center; color:#7f8c8d;">Your voice. Unfiltered. Australian.</p>
 
-  <button class="load-btn" onclick="loadLatestPosts()">Load Latest Posts</button>
+  <button class="load-btn" onclick="fetchRealPosts()">Refresh Blog from Site</button>
 
-  <input type="text" id="search" placeholder="Search posts: politics, economy, culture...">
+  <input type="text" id="search" placeholder="Search: housing, AI, climate...">
   <button onclick="searchPosts()">Search</button>
 
   <div id="posts"></div>
 
   <script>
-    let allPosts = []; // Will hold "real" posts
+    let allPosts = []; // Holds real posts from the site
 
-    // "Real" posts (placeholder based on Australian opinion trends; replace with RSS fetch when available)
-    // To add real RSS: Use fetch('https://publicview.com.au/rss.xml').then(r => r.text()).then(parseRSS);
-    function loadRealPosts() {
-      // Simulate real fetch (in real app: allPosts = await fetchRSS();)
-      allPosts = [
-        { 
-          title: "Election 2025: Labor's Big Gamble on Renewables", 
-          date: "Nov 4, 2025", 
-          excerpt: "As polls tighten, is the government's green push a winner or a wedge issue?", 
-          full: "With the federal election looming, Labor's $20B renewables package is front and center. Critics call it virtue signaling, but data shows job creation in regional QLD and NSW. My view: It's bold, but needs fossil fuel transition support to stick. Sources: ABS stats, Guardian analysis. (Full read: 7 min)",
-          topic: "politics"
-        },
-        { 
-          title: "Sydney's Cost of Living Squeeze: Who's to Blame?", 
-          date: "Oct 28, 2025", 
-          excerpt: "From avocados to apartments, everyday Aussies are feeling the pinch.", 
-          full: "Inflation at 4.2%, rents up 15%—Sydney's bubble is bursting for millennials. Blame global supply chains? Or local policy fails? This opinion dives into RBA reports and voter sentiment, arguing for targeted subsidies over rate hikes.",
-          topic: "economy"
-        },
-        { 
-          title: "Indigenous Voice Referendum: Lessons for Reconciliation", 
-          date: "Sep 12, 2025", 
-          excerpt: "Two years on, what the 'No' vote means for Australia's future.", 
-          full: "The 2023 defeat was a gut punch, but it sparked grassroots dialogues. Drawing from Uluru Statement reflections and recent Senate debates, this piece calls for treaty-focused reforms instead of top-down models. Healing starts local.",
-          topic: "society"
-        },
-        { 
-          title: "AI in Aussie Classrooms: Opportunity or Overhype?", 
-          date: "Aug 20, 2025", 
-          excerpt: "Teachers weigh in on ChatGPT's role in education.", 
-          full: "From essay writing to code debugging, AI tools are infiltrating schools. Pros: Personalized learning. Cons: Cheating scandals. Based on ACARA guidelines and teacher surveys, my take: Regulate, don't ban—train kids to use it ethically.",
-          topic: "education"
-        },
-        { 
-          title: "Great Barrier Reef: Last Chance for Global Action", 
-          date: "Jul 15, 2025", 
-          excerpt: "Bleaching events highlight the urgency of emission cuts.", 
-          full: "2025's third mass bleaching in a decade—UNESCO warns of delisting. Australia's $1B reef fund is a start, but international pressure on China and India is key. Opinion: Tie trade deals to carbon pledges. (Includes CSIRO data).",
-          topic: "environment"
-        }
-      ];
-      showAllPosts();
-    }
-
-    function loadLatestPosts() {
+    // Fetch real posts from https://publicview.com.au/?blog=y
+    async function fetchRealPosts() {
       const div = document.getElementById('posts');
-      div.innerHTML = '<p class="loading">🔄 Fetching latest from PublicView... (simulated)</p>';
-      setTimeout(() => {
-        loadRealPosts(); // In real: fetch from RSS/API
-        document.getElementById('search').value = ''; // Clear search
-      }, 1000);
+      div.innerHTML = '<p class="loading">🔄 Fetching real articles from PublicView...</p>';
+
+      try {
+        const response = await fetch('https://publicview.com.au/?blog=y');
+        const html = await response.text();
+        
+        // Parse HTML to extract articles (assumes standard blog structure: h2/h3 for titles, p for excerpts)
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const potentialTitles = doc.querySelectorAll('h1, h2, h3, .post-title, .article-title');
+        const potentialExcerpts = doc.querySelectorAll('p, .excerpt, .summary');
+        
+        allPosts = [];
+        for (let i = 0; i < Math.min(potentialTitles.length, potentialExcerpts.length); i++) {
+          const title = potentialTitles[i].textContent.trim();
+          if (title && title.length > 5) { // Basic filter for valid titles
+            allPosts.push({
+              title: title,
+              date: new Date().toLocaleDateString('en-AU'), // Default date if none found
+              excerpt: potentialExcerpts[i]?.textContent.trim() || 'Read the full opinion.',
+              full: 'Full article content would load here from the site. (Currently, the blog page has no posts—check back soon!)',
+              topic: 'opinion' // Default topic
+            });
+          }
+        }
+
+        if (allPosts.length === 0) {
+          div.innerHTML = '<p class="no-posts">No articles found on the blog yet. Stay tuned—new opinions coming soon! <br><small>(Site: https://publicview.com.au/?blog=y)</small></p>';
+          return;
+        }
+
+        showAllPosts();
+      } catch (error) {
+        div.innerHTML = '<p class="error">Couldn\'t fetch from site (network issue?). Showing welcome message.</p><p class="no-posts">The blog at https://publicview.com.au/?blog=y is live—add posts there to see them here!</p>';
+      }
     }
 
     function searchPosts() {
       const query = document.getElementById('search').value.toLowerCase().trim();
       if (!query || allPosts.length === 0) {
-        if (allPosts.length === 0) document.getElementById('posts').innerHTML = '<p class="no-posts">Tap "Load Latest Posts" first!</p>';
+        if (allPosts.length === 0) document.getElementById('posts').innerHTML = '<p class="no-posts">Tap "Refresh Blog from Site" first!</p>';
         return;
       }
 
       const div = document.getElementById('posts');
-      div.innerHTML = '<p class="loading">🔍 Finding opinions on "' + query + '"...</p>';
+      div.innerHTML = '<p class="loading">Searching "' + query + '"...</p>';
 
       setTimeout(() => {
         const matches = allPosts.filter(post => 
           post.title.toLowerCase().includes(query) || 
           post.excerpt.toLowerCase().includes(query) ||
-          post.topic.includes(query) ||
-          post.full.toLowerCase().includes(query)
+          post.topic.includes(query)
         );
 
         if (matches.length === 0) {
-          div.innerHTML = '<p class="error">No posts found for "' + query + '". Try "politics" or "economy".</p>';
+          div.innerHTML = '<p class="error">No matching articles. Try broader terms like "opinion".</p>';
           return;
         }
 
@@ -128,7 +113,7 @@
           <h3>${post.title}</h3>
           <p><small>${post.date} | #${post.topic}</small></p>
           <p>${post.excerpt}</p>
-          <button onclick="toggleFull('${post.full.replace(/'/g, "\\'")}')">Read Full Opinion</button>
+          <button onclick="toggleFull('${post.full.replace(/'/g, "\\'")}')">Read Full</button>
           <div class="full-article" id="full-${post.title.replace(/\s+/g, '-')}">${post.full}</div>
         </div>
       `;
@@ -137,20 +122,21 @@
     function toggleFull(content) {
       const articles = document.querySelectorAll('.full-article');
       articles.forEach(a => a.style.display = 'none');
+      event.target.nextElementSibling.innerHTML = content;
       event.target.nextElementSibling.style.display = 'block';
     }
 
     function showAllPosts() {
       const div = document.getElementById('posts');
       if (allPosts.length === 0) {
-        div.innerHTML = '<p class="no-posts">No posts loaded yet. Tap "Load Latest Posts"!</p>';
+        div.innerHTML = '<p class="no-posts">No posts loaded. Refresh to check the site!</p>';
         return;
       }
       div.innerHTML = allPosts.map(createPostHTML).join('');
     }
 
-    // Load initial posts (simulated "real" fetch)
-    loadRealPosts();
+    // Auto-fetch on load
+    fetchRealPosts();
 
     // Enter key search
     document.getElementById('search').addEventListener('keypress', e => {
@@ -158,5 +144,5 @@
     });
   </script>
 
-  <!-- Makes it installable as a real app -->
-  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUHVibGljVmlldyBCbG9nIiwic2hvcnRfbmFtZSI6IlB1YmxpY1ZpZXciLCJzdGFydF91cmwiOiIvIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJ0aGVtZV9jb2xvciI6IiMyYzNlNTAiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9Sd0tHZ3dBQUFBTlNRVUVVSEZSQUdSd0FBQUFE TWdBQUFQYWRBQUFDZ29BQVBhd0FBQVlBQUFjZ0FBQURJQUFBQUFBR2dBQUFBQUJDZ0FBQUFBQ0dBQUFBQUJER29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQU
+  <!-- Installable app -->
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUHVibGljVmlldyBCbG9nIiwic2hvcnRfbmFtZSI6IlB1YmxpY1ZpZXciLCJzdGFydF91cmwiOiIvIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJ0aGVtZV9jb2xvciI6IiMwMDAwMDAiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9Sd0tHZ3dBQUFBTlNRVUVVSEZSQUdSd0FBQUFE TWdBQUFQYWRBQUFDZ29BQVBhd0FBQVlBQUFjZ0FBQURJQUFBQUFBR2dBQUFBQUJDZ0FBQUFBQ0dBQUFBQUJER29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUF
