@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PublicView Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial; margin: 0; padding: 20px; background: #f8f9fa; line-height: 1.5; }
+    h1 { color: #2c3e50; text-align: center; font-size: 1.8rem; }
+    input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; margin-top: 10px; cursor: pointer; }
+    button:hover { background: #2980b9; }
+    .post { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .post h3 { color: #34495e; margin: 0 0 10px; }
+    .post p { color: #7f8c8d; font-size: 14px; }
+    .full-article { display: none; background: #ecf0f1; padding: 20px; margin-top: 10px; border-radius: 6px; }
+    .loading { text-align: center; color: #95a5a6; font-style: italic; }
+    .error { color: #e74c3c; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <h1>PublicView Blog</h1>
+  <p style="text-align:center; color:#7f8c8d;">Browse & search opinion pieces on Australian topics</p>
+
+  <input type="text" id="search" placeholder="Search posts: politics, economy, culture...">
+  <button onclick="searchPosts()">Search</button>
+
+  <div id="posts"></div>
+
+  <script>
+    // Sample opinion blog posts (like what PublicView might have)
+    const blogPosts = [
+      { 
+        title: "Why Australia's Housing Crisis Needs Bold Reform", 
+        date: "Oct 15, 2025", 
+        excerpt: "Opinion: With rents soaring, it's time for government to act.", 
+        full: "In this heated debate, we explore how zoning laws and investor incentives are fueling the crisis. Drawing from recent stats, here's why a national strategy is overdue. (Full read: 5 min)",
+        topic: "economy"
+      },
+      { 
+        title: "The Rise of Independent Voices in Aussie Media", 
+        date: "Nov 1, 2025", 
+        excerpt: "Thoughts on how blogs like this are shaking up the news landscape.", 
+        full: "Gone are the days of gatekept stories. Platforms like PublicView empower everyday Aussies to share unfiltered takes on politics and culture. But is echo-chamber risk real? Let's discuss.",
+        topic: "media"
+      },
+      { 
+        title: "Climate Action: Australia's Tipping Point", 
+        date: "Sep 20, 2025", 
+        excerpt: "A personal view on the fires, floods, and policy failures.", 
+        full: "From the bushfires of 2019 to today's floods, our island continent is ground zero for climate change. This opinion calls for urgent, bipartisan steps—starting with renewables investment.",
+        topic: "environment"
+      },
+      { 
+        title: "Tech Boom or Bust: Silicon Valley Down Under?", 
+        date: "Aug 5, 2025", 
+        excerpt: "Debating if Sydney can rival global tech hubs.", 
+        full: "With startups popping up in Surry Hills, Australia’s tech scene is buzzing. But talent drain and funding gaps loom large. My take: Invest in education to keep the momentum going.",
+        topic: "technology"
+      },
+      { 
+        title: "Cultural Shifts: What Gen Z Means for Politics", 
+        date: "Nov 3, 2025", 
+        excerpt: "How young voters are rewriting the rulebook.", 
+        full: "From TikTok activism to climate strikes, Gen Z isn't just participating—they're leading. This piece argues for parties to adapt or get left behind in the next election cycle.",
+        topic: "politics"
+      }
+    ];
+
+    function searchPosts() {
+      const query = document.getElementById('search').value.toLowerCase().trim();
+      if (!query) {
+        showAllPosts();
+        return;
+      }
+
+      const div = document.getElementById('posts');
+      div.innerHTML = '<p class="loading">🔍 Finding opinions on "' + query + '"...</p>';
+
+      setTimeout(() => {
+        const matches = blogPosts.filter(post => 
+          post.title.toLowerCase().includes(query) || 
+          post.excerpt.toLowerCase().includes(query) ||
+          post.topic.includes(query) ||
+          post.full.toLowerCase().includes(query)
+        );
+
+        if (matches.length === 0) {
+          div.innerHTML = '<p class="error">No posts found for "' + query + '". Try "politics" or "economy".</p>';
+          return;
+        }
+
+        div.innerHTML = matches.map(post => `
+          <div class="post">
+            <h3>${post.title}</h3>
+            <p><small>${post.date} | #${post.topic}</small></p>
+            <p>${post.excerpt}</p>
+            <button onclick="toggleFull('${post.full.replace(/'/g, "\\'")}')">Read Full Opinion</button>
+            <div class="full-article" id="full-${post.title.replace(/\s+/g, '-')}">${post.full}</div>
+          </div>
+        `).join('');
+      }, 600); // Short delay for "loading" feel
+    }
+
+    function toggleFull(content) {
+      const articles = document.querySelectorAll('.full-article');
+      articles.forEach(a => a.style.display = 'none');
+      event.target.nextElementSibling.style.display = 'block';
+    }
+
+    function showAllPosts() {
+      document.getElementById('posts').innerHTML = blogPosts.map(post => `
+        <div class="post">
+          <h3>${post.title}</h3>
+          <p><small>${post.date} | #${post.topic}</small></p>
+          <p>${post.excerpt}</p>
+          <button onclick="toggleFull('${post.full.replace(/'/g, "\\'")}')">Read Full</button>
+          <div class="full-article" id="full-${post.title.replace(/\s+/g, '-')}">${post.full}</div>
+        </div>
+      `).join('');
+    }
+
+    // Load all posts on start
+    showAllPosts();
+
+    // Enter key search
+    document.getElementById('search').addEventListener('keypress', e => {
+      if (e.key === 'Enter') searchPosts();
+    });
+  </script>
+
+  <!-- App install stuff (same as before) -->
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUHVibGljVmlldyBCbG9nIiwic2hvcnRfbmFtZSI6IlB1YmxpY1ZpZXciLCJzdGFydF91cmwiOiIvIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJ0aGVtZV9jb2xvciI6IiMyYzNlNTAiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9Sd0tHZ3dBQUFBTlNRVUVVSEZSQUdSd0FBQUFE TXdGQVBWREFBQUFDZ29BQVBh d0FBQV lBQUFjZ0FBQURJQUFBQUFBR2dBQUFBQUJDZ0FBQUFBQ0dBQUFBQUJER29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR29BQUFBQ0RnQUFBQUFDR
